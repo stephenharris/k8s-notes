@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+  labels:
+    app: app-settings
+data:
+  enemies: aliens
+  lives: "3"
+  enemies.cheat: "true"
+  enemies.cheat.level: noGoodRotten
+  default: |
+    address: https://api.datadoghq.com
+    api-key: igq7imbxlm97vnlw61bo
+    app-key: 35bu8ofvc0osyjmqxtgi

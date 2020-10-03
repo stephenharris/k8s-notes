@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: docker-pod
+  labels:
+    app: nginx
+    rel: stable
+    ver: "1234"
+spec:
+  volumes:
+  - name: docker-socket
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
+  containers:
+  - name: my-docker
+    image: docker
+    volumeMounts:
+      - name: docker-socket
+        mountPath: /var/run/docker.sock

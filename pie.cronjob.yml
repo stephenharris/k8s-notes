@@ -1,0 +1,31 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: pie-counter-cron
+spec:
+  # Allow/prevent one cron job starting before the previous had finished. Could be Forbid or Replace
+  concurrencyPolicy: Allow 
+  # Scheduling using Cron format
+  schedule: "*/1 * * * *"
+  # Maximum number of jobs to keep. Defaults to 3 and 1.
+  successfulJobsHistoryLimit: 2
+  # If a job has not started within these number of seconds, fail the job. Next job is scheduled as normal.
+  #startingDeadlineSeconds: undefined
+  failedJobsHistoryLimit: 1
+  # JobTemplate equates to the "Job" manifest
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          name: pie-counter
+        spec:
+          # Never restart if container fails, or OnFailure and can set max restarts
+          # we can also set max time job is expected to run.
+          restartPolicy: OnFailure
+          containers:
+          - name: pie-counter
+            image: alpine
+            command:
+              - "sh"
+              - "-c"
+              - "echo 'scale=1000; 4*a(1)' | bc -l"

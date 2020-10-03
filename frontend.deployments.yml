@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: my-nginx
+    rel: stable
+    ver: "1234"
+    tier: frontend
+spec:
+  replicas: 3
+  # Number of seconds to wait untl pod is considered available. Defaults to 0 (available as soon as ready)
+  minReadySeconds: 10
+  # Number of seconds to wait untl pod is considered stalled. DEfaults 600s. 
+  # Deployment fails if the pod doesn't progress before the deadline.
+  progressDeadlineSeconds: 30
+  # How many deployments to be kept in history - defaults to 10.
+  revisionHistoryLimit: 5
+  # following is default
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # max number of pods over the desired number during a deployment
+      maxSurge: 25%
+      # max number of pods uanvailable during a deplyoyment
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      tier: frontend
+      track: stable
+  template:
+    metadata:
+      labels:
+        tier: frontend
+        track: stable
+    spec:
+      containers:
+      - name: my-nginx-container
+        image: simpleapp:v1
+        ports:
+        - containerPort: 9000
+        # mount our settings (see volume at the bottom - settings can be read from settings.json file)
+        volumeMounts:
+          - name: json-settings-vol
+            mountPath: /etc/config
+            readOnly: true
+            
+        env:
+          # Load a particular key value pair from our 'app-settings' config map, created via manifest
+          - name: NUM_ENEMIES
+            valueFrom:
+              configMapKeyRef:
+                name: app-settings
+                key: enemies
+
+          # Load a particular secret value pair from our 'my-password' secret, created via command
+          - name: MY_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-password
+                key: pwd
+        # Load all key-value pairs from our 'env-settings' config map, created from env file
+        envFrom:
+          - configMapRef:
+              name: env-settings
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 9000
+          initialDelaySeconds: 15
+          timeoutSeconds: 2
+          periodSeconds: 5
+          failureThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 9000
+          # fail if we don't get a response within 2 seonds
+          timeoutSeconds: 2
+          # How often to perform probe (every 5 seconds)
+          periodSeconds: 5
+          # After one failure is marked as unready
+          failureThreshold: 1
+        resources:
+          limits:
+            memory: "128Mi" # 128 MB 
+            cpu: "200m" # 200 milicpu or 20% cpu
+
+      # Create 'app-settings' key-values as a volume. In this example there is only one key 'settings.json'
+      # containing key-value pairs in JSON format.
+      volumes:
+        - name: json-settings-vol
+          configMap:
+            name: json-settings

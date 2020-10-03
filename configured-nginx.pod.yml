@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configured-nginx
+  labels:
+    app: nginx
+    rel: stable
+    ver: "1234"
+spec:
+  containers:
+  - name: configured-nginx-container
+    image: simpleapp
+    imagePullPolicy: Never
+    ports:
+    - containerPort: 9000
+    # mount our settings (see volume at the bottom - settings can be read from settings.json file)
+    volumeMounts:
+      - name: json-settings-vol
+        mountPath: /etc/config
+      - name: private-key-vol
+        mountPath: /etc/secret
+        readOnly: true
+    
+    # Load a particular key value pair from our 'app-settings' config map, created via manifest
+    env:
+    - name: NUM_ENEMIES
+      valueFrom:
+        configMapKeyRef:
+          name: app-settings
+          key: enemies
+    - name: MY_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: my-password
+          key: pwd
+  
+    # Load all key-value pairs from our 'env-settings' config map, created from env file
+    envFrom:
+      - configMapRef:
+          name: env-settings
+
+  # Create 'app-settings' key-values as a volume. In this example there is only one key 'settings.json'
+  # containing key-value pairs in JSON format.
+  volumes:
+    - name: json-settings-vol
+      configMap:
+        name: json-settings
+  
+    - name: private-key-vol
+      secret: 
+        # NOTE: secretName not name
+        secretName: my-keys

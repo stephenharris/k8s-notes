@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-loadbalancer
+spec:
+  type: LoadBalancer
+  selector:
+    tier: frontend
+    # uncomment when using green-blue deployments
+    #track: green 
+  ports:
+  - name: "80"
+    # incoming port (that it 'listens on')
+    port: 80
+    # the port it maps to (on the downstream pods)
+    targetPort: 9000

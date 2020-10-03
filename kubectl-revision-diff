@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --old=*)
+      old="${1#*=}"
+      ;;
+    --new=*)
+      new="${1#*=}"
+      ;;
+    *)
+      printf "***************************\n"
+      printf "* Error: Invalid argument.*\n"
+      printf "***************************\n"
+      exit 1
+  esac
+  shift
+done
+
+diff <(kubectl rollout history -f frontend.deployments.yml --revision=$old) <(kubectl rollout history -f frontend.deployments.yml --revision=$new)
+
